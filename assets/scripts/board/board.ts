@@ -7,12 +7,13 @@
 
 import { Animator } from "../animation/board.animator";
 import { Cell } from "../cell/Cell";
-import CellComponent from "../cell/cell.component";
+import CellComponent, { ColorDict } from "../cell/cell.component";
 import {
   BOARD_HEIGHT,
   BOARD_WIDTH,
   DIRECTIONS,
   MoveInfoMap,
+  MOVEMENT,
 } from "../game/game.const";
 import GameController from "../game/game.controller";
 import { BoardMatrix } from "./BoardMatrix";
@@ -28,13 +29,14 @@ export default class BoardController extends cc.Component {
   @property(GameController)
   game: GameController;
   board: BoardMatrix = null;
+  isLocking: boolean = false;
   // LIFE-CYCLE CALLBACKS:
-
+  blockTween: cc.Tween = null;
   onLoad() {}
 
   start() {
     this.board = BoardMatrix.GetInstance();
-    this.AddPlaceholders();
+    //this.AddPlaceholders();
     this.AddToView();
     cc.tween(this.node)
       .delay(0.5)
@@ -59,9 +61,13 @@ export default class BoardController extends cc.Component {
         })
         .start();
     } else {
+      this.board = BoardMatrix.GetInstance();
+
       for (let items of this.board.Matrix) {
         for (let item of items) {
-          item.cell.node.destroy();
+          if (item && item.cell) {
+            item.cell.node.destroy();
+          }
         }
       }
       this.board.NewGame();
@@ -73,7 +79,7 @@ export default class BoardController extends cc.Component {
       for (let j = 0; j < BOARD_HEIGHT; j++) {
         const cell = cc.instantiate(this.pfCell);
         //cell.setPosition(this.board.IndexToPosition(cc.v2(i, j)));
-        //cell.zIndex = 99;
+        cell.zIndex = 1;
         this.placeHolder.addChild(cell);
       }
     }
@@ -100,11 +106,17 @@ export default class BoardController extends cc.Component {
   }
 
   HandleMove(move: MOVEMENT) {
+    if (this.isLocking) {
+      cc.log("locking");
+      return;
+    }
+
     if (
       this.game.game.GameOver ||
       this.board.CheckWin() ||
       this.board.CheckGameOver()
     ) {
+      this.isLocking = false;
       this.game.game.EndGame();
       cc.log("Game ended.");
       return;
@@ -112,71 +124,55 @@ export default class BoardController extends cc.Component {
     let canMove = this.board.CheckCanMove(move);
     cc.log("can move: " + canMove);
     if (canMove) {
-      // switch (move) {
-      //   case MOVEMENT.UP:
-      //     this.board.MoveUp();
-      //     break;
-      //   case MOVEMENT.DOWN:
-      //     this.board.MoveDown();
-      //     break;
-      // }
+      this.isLocking = true;
+      setTimeout(() => {
+        this.isLocking = false;
+      }, 200);
+      this.game.soundManager.play("move", false);
       const score = this.board.Move(MoveInfoMap[move]);
       this.UpdateScore(score);
       cc.log(this.board.Matrix);
       if (this.board.CheckWin()) {
         cc.log("Won");
         this.game.EndGame(true);
-      } else if (this.board.CheckGameOver()) {
-        this.game.EndGame(false);
       } else {
         const spawnCell = this.board.SpawnNewRandom();
-        Animator.Spawn(spawnCell, true);
-      }
-
-      for (let i = 0; i < BOARD_HEIGHT; i++) {
-        for (let j = 0; j < BOARD_WIDTH; j++) {
-          const cell: Cell = this.board.GetCell(cc.v2(i, j));
-          cell.cell.SetNumber(cell.no);
-          //cell.to = null;
-          // const comp = cell.cell;
-          // if (comp != null)
-          //   if (cell.to !== null) {
-          //     //comp.node.setPosition(this.board.IndexToPosition(cell.position));
-          //     Animator.MoveCell(
-          //       cell,
-          //       this.board,
-          //       () => {
-          //         //comp.destroy();
-          //         if (cell.no === 0) {
-          //           comp.node.destroy();
-          //           //comp.node.opacity = 0;
-          //           //cell.cell = null;
-          //           cell.to = null;
-          //         } else {
-          //           comp.node.setPosition(
-          //             this.board.IndexToPosition(cell.position)
-          //           );
-
-          //           comp.node.zIndex = 99;
-          //           comp.SetNumber(cell.no);
-          //           cell.to = null;
-          //         }
-          //       },
-          //       true
-          //     );
-          //   } else {
-          //     cc.tween(cell.cell.node)
-          //       .delay(0.2)
-          //       .call(() => {
-          //         if (cell.no !== 0) {
-          //           comp.SetNumber(cell.no);
-          //           comp.node.zIndex = 99;
-          //         }
-          //       })
-          //       .start();
-          //   }
+        Animator.Spawn(spawnCell, true, true);
+        if (this.board.CheckGameOver()) {
+          cc.log("GameOver");
+          this.game.EndGame(false);
         }
       }
+
+      const arr: Cell[] = [].concat(...this.board.Matrix);
+      arr.forEach((cell, index) => {
+        //const cell: Cell = this.board.GetCell(cc.v2(i, j));
+        //cell.cell.SetNumber(cell.no);
+        //cell.to = null;
+        const comp = cell.cell;
+        if (comp != null) {
+          if (cell.to === null) {
+            cell.to = cc.v2(cell.position.x, cell.position.y);
+          }
+          if (this.board.GetCell(cell.to).no !== 0) {
+            Animator.MoveCell(
+              cell,
+              this.board,
+              () => {
+                comp.node.zIndex = cell.no + 1;
+                comp.node.setPosition(
+                  this.board.IndexToPosition(cell.position)
+                );
+                comp.SetNumber(cell.no);
+                cell.to = null;
+              },
+              true
+            );
+          } else {
+            cell.to = null;
+          }
+        }
+      });
     }
   }
   UpdateScore(score: number) {
@@ -185,13 +181,4 @@ export default class BoardController extends cc.Component {
   }
 
   // update (dt) {}
-}
-
-export enum MOVEMENT {
-  LEFT,
-  RIGHT,
-  UP,
-  DOWN,
-
-  TOTAL,
 }

@@ -26,7 +26,7 @@ export default class BasePopup extends cc.Component {
   }
 
   destroy(): boolean {
-    this.destroy();
+    super.destroy();
     this.node.off(cc.Node.EventType.TOUCH_END, this.hide, this);
     return true;
   }

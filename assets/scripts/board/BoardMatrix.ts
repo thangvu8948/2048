@@ -1,4 +1,5 @@
 import { Cell } from "../cell/Cell";
+import CellComponent from "../cell/cell.component";
 import {
   BEGIN_NUMBER,
   BOARD_HEIGHT,
@@ -7,11 +8,11 @@ import {
   CELL_SIZE,
   DIRECTIONS,
   MOVEINFO,
+  MOVEMENT,
   NO_START_CELL,
   WIN_NUMBER,
 } from "../game/game.const";
 import { Utils } from "../utils/Utils";
-import { MOVEMENT } from "./board";
 
 export class BoardMatrix {
   private _matrix: Cell[][] = null;
@@ -43,6 +44,7 @@ export class BoardMatrix {
   NewGame() {
     this.InitBlankBoard();
     this.InitGameBoard();
+    //this.TestBoard();
   }
   InitBlankBoard() {
     this._matrix = Array(BOARD_WIDTH);
@@ -84,17 +86,16 @@ export class BoardMatrix {
     //   [1, 0, 1, 0],
     // ];
     const board = [
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
-      [1, 1, 1, 1],
+      [2, 4, 2, 0],
+      [4, 8, 4, 8],
+      [2, 4, 2, 16],
+      [4, 8, 4, 8],
     ];
     for (let i = 0; i < board.length; i++) {
       for (let j = 0; j < board.length; j++) {
-        if (board[i][j] == 1) {
-          const cell = this.CreateCell(cc.v2(i, j));
-          this.SetCell(cell);
-        }
+        const cell = this.CreateCell(cc.v2(i, j));
+        cell.no = board[i][j];
+        this.SetCell(cell);
       }
     }
 
@@ -228,20 +229,6 @@ export class BoardMatrix {
           return true;
         }
       }
-
-      // var seen = {};
-      // var hasDuplicates = item.some((currentObject) => {
-      //   if (currentObject.no !== 0) {
-      //     if (seen.hasOwnProperty(currentObject.no)) {
-      //       // Current is already seen
-      //       return true;
-      //     }
-
-      //     // Current is being seen for the first time
-      //   }
-      //   return (seen[currentObject.no] = false);
-      // });
-      //if (hasDuplicates) return true;
 
       let first: Cell = null;
       for (let i = 0; i < item.length - 1; i++) {
@@ -453,7 +440,14 @@ export class BoardMatrix {
         if (curr !== 0 && curr === prev) {
           temp[lastHole].no = curr + prev;
 
-          temp[j].to = cc.v2(lastHole, i);
+          temp[j].to =
+            info.dir === MOVEMENT.UP || info.dir === MOVEMENT.DOWN
+              ? cc.v2(lastHole, i)
+              : cc.v2(i, lastHole);
+          temp[prevIdx].to =
+            info.dir === MOVEMENT.UP || info.dir === MOVEMENT.DOWN
+              ? cc.v2(lastHole, i)
+              : cc.v2(i, lastHole);
           score += curr + prev;
 
           prev = arr[j + info.step_2] ? arr[j + info.step_2].no : 0;
@@ -543,5 +537,11 @@ export class BoardMatrix {
     const lucky = Utils.GetRandomInt(0, spawns.length, true);
     spawns[lucky].no = 2;
     return spawns[lucky];
+  }
+
+  SwapCell(cell1: Cell, cell2: Cell) {
+    const c: CellComponent = cell1.cell;
+    cell1.cell = cell2.cell;
+    cell2.cell = c;
   }
 }

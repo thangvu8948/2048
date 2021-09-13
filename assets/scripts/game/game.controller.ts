@@ -5,10 +5,12 @@
 // Learn life-cycle callbacks:
 //  - https://docs.cocos.com/creator/manual/en/scripting/life-cycle-callbacks.html
 
-import BoardController, { MOVEMENT } from "../board/board";
+import BoardController from "../board/board";
+import { BoardMatrix } from "../board/BoardMatrix";
 import MasterPopup from "../popups/masterpopup";
+import { SoundManager } from "../utils/Sound";
 import { Utils } from "../utils/Utils";
-import { MIN_SWIPE_DISTANCE } from "./game.const";
+import { MIN_SWIPE_DISTANCE, MOVEMENT } from "./game.const";
 import { GameModel } from "./game.model";
 
 const { ccclass, property } = cc._decorator;
@@ -26,6 +28,9 @@ export default class GameController extends cc.Component {
 
   @property(MasterPopup)
   masterPopup: MasterPopup;
+
+  @property(SoundManager)
+  soundManager: SoundManager;
   // LIFE-CYCLE CALLBACKS:
   game: GameModel;
   board: BoardController;
@@ -41,8 +46,15 @@ export default class GameController extends cc.Component {
       Utils.SaveAll();
     });
     Utils.LoadAll();
+    if (
+      BoardMatrix.GetInstance().CheckGameOver() ||
+      BoardMatrix.GetInstance().CheckWin()
+    ) {
+      this.NewGame();
+    } else {
+      this.score.string = this.game.Score.toString();
+    }
     this.highScore.string = this.game.HighScore.toString();
-    this.score.string = this.game.Score.toString();
   }
   onTouchEnd(touch: cc.Event.EventTouch) {
     touch.stopPropagation();
@@ -123,6 +135,7 @@ export default class GameController extends cc.Component {
     this.board.NewGame(true);
     this.SetScore(0);
     this.game.GameOver = false;
+    this.board.isLocking = false;
   }
 
   EndGame(won: boolean) {
@@ -130,8 +143,10 @@ export default class GameController extends cc.Component {
     //show popup
     if (won) {
       this.masterPopup.show("GameWon");
+      this.soundManager.play("clap", false);
     } else {
       this.masterPopup.show("GameOver");
+      this.soundManager.play("lose", false);
     }
   }
   // update (dt) {}

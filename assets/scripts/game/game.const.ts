@@ -1,5 +1,3 @@
-import { MOVEMENT } from "../board/board";
-
 export const CELL_SIZE: number = 120;
 export const CELL_PADDING: number = 20;
 export const BOARD_WIDTH: number = 4;
@@ -7,7 +5,15 @@ export const BOARD_HEIGHT: number = 4;
 export const NO_START_CELL: number = 2;
 export const BEGIN_NUMBER: number = 2;
 export const MIN_SWIPE_DISTANCE = 50;
-export const WIN_NUMBER = 8;
+export const WIN_NUMBER = 2048;
+export enum MOVEMENT {
+  LEFT,
+  RIGHT,
+  UP,
+  DOWN,
+
+  TOTAL,
+}
 
 export const DIRECTIONS: Record<string, cc.Vec2> = {
   LEFT: cc.v2(-1, 0),

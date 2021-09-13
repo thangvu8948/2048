@@ -33,6 +33,8 @@ export class Utils {
         })
       );
       cc.sys.localStorage.setItem("board", JSON.stringify(map));
+    } else {
+      cc.sys.localStorage.setItem("board", "");
     }
     if (game) {
       cc.sys.localStorage.setItem("game", JSON.stringify(game));
@@ -54,5 +56,9 @@ export class Utils {
       GameModel.Instance().CloneAttributes(game);
     }
     //GameModel.Instance().SetHighscore(highScore);
+  }
+
+  public static ClearSavedBoard() {
+    cc.sys.localStorage.setItem("board", "");
   }
 }
