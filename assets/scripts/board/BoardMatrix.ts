@@ -21,8 +21,8 @@ export class BoardMatrix {
     this.InitBlankBoard();
 
     if (!load) {
-      //this.InitGameBoard();
-      this.TestBoard();
+      this.InitGameBoard();
+      //this.TestBoard();
     }
   }
   private static _instance: BoardMatrix = null;
