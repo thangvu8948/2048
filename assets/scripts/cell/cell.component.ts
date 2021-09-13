@@ -34,15 +34,15 @@ export default class CellComponent extends cc.Component {
 }
 
 export const ColorDict: Record<string, string> = {
-  2: "#eee4da",
-  4: "#ede0c8",
-  8: "#ebe4da",
-  16: "#ebe4da",
-  32: "#ebe4da",
-  64: "#ebe4da",
-  128: "#ebe4da",
-  256: "#ebe4da",
-  512: "#ebe4da",
-  1024: "#ebe4da",
-  2048: "#ebe4da",
+  2: "#57b069",
+  4: "#6ba952",
+  8: "#7da23d",
+  16: "#8e9928",
+  32: "#9e8f16",
+  64: "#ae8409",
+  128: "#bc770c",
+  256: "#c96819",
+  512: "#d35729",
+  1024: "#db443a",
+  2048: "#df2f4d",
 };
